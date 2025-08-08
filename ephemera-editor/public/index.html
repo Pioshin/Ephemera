@@ -88,8 +88,15 @@
         .plot-point-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .plot-point-header input { flex-grow: 1; margin-right: 10px; }
         
-        #timeline-container { width: 100%; overflow-x: auto; }
-        #timeline-svg { min-width: 100%; }
+        .analysis-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .analysis-card { background-color: var(--panel-bg); padding: 25px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .analysis-card h3 { color: var(--accent-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .stat-item { display: flex; justify-content: space-between; font-size: 1.1em; margin-bottom: 10px; }
+        .stat-item span:first-child { color: #a6adc8; }
+        .stat-item span:last-child { font-weight: bold; color: var(--title-color); }
+        #char-chart-container svg { width: 100%; height: auto; }
+        .word-freq-list { list-style: none; padding: 0; }
+        .word-freq-list li { display: flex; justify-content: space-between; margin-bottom: 5px; }
 
     </style>
 </head>
@@ -132,22 +139,22 @@
     </div>
     
     <div id="characters-view" class="view module-view">
-         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Personaggi</h1><div><button class="ai-button" onclick="addNewItem('personaggi', 'character', { nome: 'Nuovo Personaggio' })">Nuovo Personaggio</button></div></div>
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Personaggi</h1><div><button class="ai-button" onclick="addNewCharacter()">Nuovo Personaggio</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="character-list" class="item-list"><p class="status-message">Nessun personaggio.</p></ul></div><div id="character-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un personaggio.</p></div></div></div>
     </div>
     
     <div id="places-view" class="view module-view">
-         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Luoghi</h1><div><button class="ai-button" onclick="addNewItem('luoghi', 'place', { nome: 'Nuovo Luogo' })">Nuovo Luogo</button></div></div>
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Luoghi</h1><div><button class="ai-button" onclick="addNewPlace()">Nuovo Luogo</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="place-list" class="item-list"><p class="status-message">Nessun luogo.</p></ul></div><div id="place-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un luogo.</p></div></div></div>
     </div>
 
     <div id="objects-view" class="view module-view">
-         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Oggetti</h1><div><button class="ai-button" onclick="addNewItem('oggetti', 'object', { nome: 'Nuovo Oggetto' })">Nuovo Oggetto</button></div></div>
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Oggetti</h1><div><button class="ai-button" onclick="addNewObject()">Nuovo Oggetto</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="object-list" class="item-list"><p class="status-message">Nessun oggetto.</p></ul></div><div id="object-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un oggetto.</p></div></div></div>
     </div>
 
     <div id="narrative-lines-view" class="view module-view">
-         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Linee Narrative</h1><div><button class="ai-button" onclick="addNewItem('linee_narrative', 'narrative_line', { nome: 'Nuova Linea Narrativa', premessa: '', plotPoints: [] })">Nuova Linea Narrativa</button></div></div>
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Linee Narrative</h1><div><button class="ai-button" onclick="addNewNarrativeLine()">Nuova Linea Narrativa</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="narrative_line-list" class="item-list"><p class="status-message">Nessuna linea narrativa.</p></ul></div><div id="narrative_line-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni una linea narrativa.</p></div></div></div>
     </div>
     
@@ -156,13 +163,12 @@
             <button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button>
             <h1>Analisi Romanzo</h1>
             <div>
-                <button class="ai-button" onclick="renderSimpleTimeline()">Timeline Semplice</button>
-                <button class="ai-button" onclick="analyzeWithGemini()">Analizza Incroci con Gemini</button>
+                <button class="ai-button" onclick="runFullAnalysis()">Avvia Analisi Statistica</button>
+                <button class="ai-button" onclick="alert('Funzione in sviluppo')">Analisi Avanzata con Gemini</button>
             </div>
         </div>
-        <div id="timeline-container" class="post">
-            <svg id="timeline-svg"></svg>
-            <div id="analysis-status" class="status-message">Selezioni una modalità di visualizzazione.</div>
+        <div id="analysis-dashboard" class="analysis-dashboard">
+            <p class="status-message">Pronto per l'analisi. Clicchi su "Avvia Analisi Statistica" per iniziare.</p>
         </div>
     </div>
 
@@ -191,7 +197,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentUser = null, projectRef = null, manuscriptRef = null, charactersRef = null, placesRef = null, objectsRef = null, narrativeLinesRef = null;
+        let currentUser = null, projectRef = null, manuscriptRef = null;
         let unsubscribe = {}, isSaving = false, saveTimeout = {};
 
         const collectionMap = {
@@ -199,6 +205,19 @@
             place: 'luoghi',
             object: 'oggetti',
             narrative_line: 'linee_narrative'
+        };
+        
+        const defaultCharacterData = {
+            nome: "Nuovo Personaggio",
+            aspetto: "",
+            psicologia: "",
+            background: "",
+            intervista: [
+                { domanda: "Qual è la tua più grande paura?", risposta: "" },
+                { domanda: "Cosa desideri più di ogni altra cosa?", risposta: "" },
+                { domanda: "Qual è il tuo ricordo più felice?", risposta: "" },
+                { domanda: "Qual è il tuo più grande rimpianto?", risposta: "" },
+            ]
         };
 
         window.navigateTo = function(viewId) {
@@ -208,7 +227,7 @@
             if (viewId === 'places-view') loadItems('luoghi', 'place');
             if (viewId === 'objects-view') loadItems('oggetti', 'object');
             if (viewId === 'narrative-lines-view') loadItems('linee_narrative', 'narrative_line');
-            if (viewId === 'analysis-view') renderSimpleTimeline();
+            if (viewId === 'analysis-view') document.getElementById('analysis-dashboard').innerHTML = `<p class="status-message">Pronto per l'analisi. Clicchi su "Avvia Analisi Statistica" per iniziare.</p>`;
         }
 
         onAuthStateChanged(auth, (user) => {
@@ -216,11 +235,6 @@
                 currentUser = user;
                 projectRef = doc(db, "progetti", currentUser.uid);
                 manuscriptRef = doc(projectRef, "manoscritto", "contenuto");
-                charactersRef = collection(projectRef, "personaggi");
-                placesRef = collection(projectRef, "luoghi");
-                objectsRef = collection(projectRef, "oggetti");
-                narrativeLinesRef = collection(projectRef, "linee_narrative");
-
                 if (unsubscribe.manuscript) unsubscribe.manuscript();
                 unsubscribe.manuscript = onSnapshot(manuscriptRef, (doc) => {
                     if (isSaving) return; 
@@ -344,6 +358,22 @@
                 if (data.plotPoints && data.plotPoints.length > 0) {
                     data.plotPoints.forEach((pp, index) => createPlotPointCard(plotPointsContainer, index, pp.titolo, pp.descrizione));
                 }
+            } else if (prefix === 'character') {
+                 panel.innerHTML = `<div class="post" data-id="${id}">
+                    <div class="post-header"><h2 class="post-title">${data.nome || 'Dettagli'}</h2><div><button class="ai-button" style="background-color: var(--danger-color);" onclick="deleteItem('${prefix}', '${id}')">Elimina</button></div></div>
+                    <div class="form-field"><label>Nome</label><input type="text" id="char-name" value="${data.nome || ''}" oninput="triggerItemSave('${prefix}')"></div>
+                    <div class="form-field"><label>Aspetto Fisico e Comportamento</label><textarea id="char-aspetto" oninput="triggerItemSave('${prefix}')">${data.aspetto || ''}</textarea></div>
+                    <div class="form-field"><label>Psicologia Profonda</label><textarea id="char-psicologia" oninput="triggerItemSave('${prefix}')">${data.psicologia || ''}</textarea></div>
+                    <div class="form-field"><label>Background e Contesto</label><textarea id="char-background" oninput="triggerItemSave('${prefix}')">${data.background || ''}</textarea></div>
+                    <hr style="border-color: var(--border-color); margin: 30px 0;">
+                    <h3>Intervista Guidata</h3>
+                    <div id="interview-container"></div>
+                    <div class="add-post-container"><button class="ai-button" onclick="addInterviewQuestion()">Aggiungi Domanda</button></div>
+                </div>`;
+                const interviewContainer = document.getElementById('interview-container');
+                if (data.intervista && data.intervista.length > 0) {
+                    data.intervista.forEach((iv, index) => createInterviewCard(interviewContainer, index, iv.domanda, iv.risposta));
+                }
             } else {
                 panel.innerHTML = `<div class="post" data-id="${id}"><div class="post-header"><h2 class="post-title">${data.nome || 'Dettagli'}</h2><div><button class="ai-button" style="background-color: var(--danger-color);" onclick="deleteItem('${prefix}', '${id}')">Elimina</button></div></div><div class="form-field"><label>Nome</label><input type="text" id="${prefix}-name" value="${data.nome || ''}" oninput="triggerItemSave('${prefix}')"></div><div class="form-field"><label>Descrizione</label><textarea id="${prefix}-desc" oninput="triggerItemSave('${prefix}')">${data.descrizione || ''}</textarea></div></div>`;
             }
@@ -368,6 +398,34 @@
             container.appendChild(card);
         }
 
+        function createInterviewCard(container, index, question, answer) {
+            const card = document.createElement('div');
+            card.className = 'interview-card';
+            card.dataset.index = index;
+            card.innerHTML = `
+                <div class="interview-header">
+                    <input type="text" class="form-field interview-question" value="${question || ''}" placeholder="Scrivi qui la domanda..." oninput="triggerItemSave('character')">
+                    <div>
+                        <button class="control-button delete-button" onclick="deleteInterviewQuestion(this)">×</button>
+                    </div>
+                </div>
+                <textarea class="form-field interview-answer" placeholder="Risposta del personaggio..." oninput="triggerItemSave('character')">${answer || ''}</textarea>
+                <div style="text-align: right; margin-top: 10px;"><button class="ai-button" onclick="alert('Funzione in sviluppo')">Approfondisci con AI</button></div>
+            `;
+            container.appendChild(card);
+        }
+        
+        window.addInterviewQuestion = function() {
+            const container = document.getElementById('interview-container');
+            createInterviewCard(container, container.children.length, '', '');
+            triggerItemSave('character');
+        }
+
+        window.deleteInterviewQuestion = function(button) {
+            button.closest('.interview-card').remove();
+            triggerItemSave('character');
+        }
+
         window.triggerItemSave = (prefix) => { clearTimeout(saveTimeout[prefix]); saveTimeout[prefix] = setTimeout(() => saveItem(prefix), 1500); }
 
         async function saveItem(prefix) {
@@ -386,6 +444,18 @@
                     premessa: document.getElementById(`${prefix}-premise`).value,
                     plotPoints: plotPoints
                 };
+            } else if (prefix === 'character') {
+                 const intervista = Array.from(document.querySelectorAll('.interview-card')).map(card => ({
+                    domanda: card.querySelector('.interview-question').value,
+                    risposta: card.querySelector('.interview-answer').value
+                }));
+                itemData = {
+                    nome: document.getElementById('char-name').value,
+                    aspetto: document.getElementById('char-aspetto').value,
+                    psicologia: document.getElementById('char-psicologia').value,
+                    background: document.getElementById('char-background').value,
+                    intervista: intervista
+                };
             } else {
                 itemData = { nome: document.getElementById(`${prefix}-name`).value, descrizione: document.getElementById(`${prefix}-desc`).value };
             }
@@ -403,7 +473,7 @@
                 openItemDetail(prefix, docRef.id, data);
             } catch (e) { console.error(`Errore creazione ${prefix}:`, e); }
         }
-        window.addNewCharacter = () => addNewItem('personaggi', 'character', { nome: "Nuovo Personaggio", descrizione: "" });
+        window.addNewCharacter = () => addNewItem('personaggi', 'character', defaultCharacterData);
         window.addNewPlace = () => addNewItem('luoghi', 'place', { nome: "Nuovo Luogo", descrizione: "" });
         window.addNewObject = () => addNewItem('oggetti', 'object', { nome: "Nuovo Oggetto", descrizione: "" });
         window.addNewNarrativeLine = () => addNewItem('linee_narrative', 'narrative_line', { nome: "Nuova Linea Narrativa", premessa: '', plotPoints: [] });
@@ -631,7 +701,141 @@
             console.log("PROMPT PER GEMINI:", prompt);
             status.textContent = 'Analisi completata (simulata). Il grafico degli incroci non è ancora implementato.';
         }
+        
+        window.runFullAnalysis = async function() {
+            const dashboard = document.getElementById('analysis-dashboard');
+            dashboard.innerHTML = `<p class="status-message">Analisi in corso... Raccolta dati dal database...</p>`;
 
+            try {
+                const manuscriptDoc = await getDoc(doc(projectRef, "manoscritto", "contenuto"));
+                const charactersSnap = await getDocs(collection(projectRef, "personaggi"));
+                
+                if (!manuscriptDoc.exists()) {
+                    dashboard.innerHTML = `<p class="status-message">Manoscritto non trovato. Scriva qualcosa prima di avviare l'analisi.</p>`;
+                    return;
+                }
+
+                const manuscript = manuscriptDoc.data();
+                const characters = charactersSnap.docs.map(doc => doc.data().nome);
+                const fullText = manuscript.posts.map(p => p.body).join(' ');
+
+                const stats = calculateGeneralStats(fullText);
+                const charPresence = analyzeCharacterPresence(fullText, characters);
+                const wordFreq = analyzeWordFrequency(fullText);
+
+                dashboard.innerHTML = `
+                    <div class="analysis-card">
+                        <h3>Statistiche Generali</h3>
+                        <div class="stat-item"><span>Caratteri totali:</span><span>${stats.charCount.toLocaleString('it-IT')}</span></div>
+                        <div class="stat-item"><span>Parole totali:</span><span>${stats.wordCount.toLocaleString('it-IT')}</span></div>
+                        <div class="stat-item"><span>Pagine stimate (250 parole/pag):</span><span>${stats.pageCount}</span></div>
+                    </div>
+                    <div class="analysis-card">
+                        <h3>Frequenza Parole (Top 10)</h3>
+                        <ul id="word-freq-list" class="word-freq-list"></ul>
+                    </div>
+                    <div class="analysis-card" style="grid-column: 1 / -1;">
+                        <h3>Distribuzione Personaggi (Menzioni)</h3>
+                        <div id="char-chart-container"></div>
+                    </div>
+                `;
+
+                const freqList = document.getElementById('word-freq-list');
+                wordFreq.slice(0, 10).forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${item.word}</span><span>${item.count}</span>`;
+                    freqList.appendChild(li);
+                });
+
+                renderCharacterChart(charPresence);
+
+            } catch (error) {
+                console.error("Errore durante l'analisi:", error);
+                dashboard.innerHTML = `<p class="status-message">Si è verificato un errore durante l'analisi.</p>`;
+            }
+        }
+
+        function calculateGeneralStats(text) {
+            const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+            return {
+                charCount: text.length,
+                wordCount: wordCount,
+                pageCount: Math.ceil(wordCount / 250)
+            };
+        }
+
+        function analyzeCharacterPresence(text, characters) {
+            const presence = [];
+            characters.forEach(name => {
+                if (name && name.trim() !== '') {
+                    const count = (text.match(new RegExp(name, "gi")) || []).length;
+                    if (count > 0) {
+                        presence.push({ name, count });
+                    }
+                }
+            });
+            return presence.sort((a, b) => b.count - a.count);
+        }
+
+        function analyzeWordFrequency(text) {
+            const stopWords = new Set(["e", "di", "a", "da", "in", "con", "su", "per", "tra", "fra", "il", "lo", "la", "i", "gli", "le", "un", "uno", "una", "del", "dello", "della", "dei", "degli", "delle", "al", "allo", "alla", "ai", "agli", "alle", "dal", "dallo", "dalla", "dai", "dagli", "dalle", "nel", "nello", "nella", "nei", "negli", "nelle", "col", "coi", "sul", "sullo", "sulla", "sui", "sugli", "sulle", "che", "non", "si", "mi", "ti", "ci", "vi", "ma", "era", "ha", "ho", "sono", "come", "quando", "perché", "più", "anche", "suo", "sua", "loro", "mio", "mia", "tuo", "tua", "con", "senza", "ma", "se", "o", "ed", "ad"]);
+            const words = text.toLowerCase().match(/\b(\w+)\b/g) || [];
+            const freqMap = {};
+            words.forEach(word => {
+                if (!stopWords.has(word) && word.length > 2) {
+                    freqMap[word] = (freqMap[word] || 0) + 1;
+                }
+            });
+            return Object.entries(freqMap).map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count);
+        }
+
+        function renderCharacterChart(data) {
+            const container = d3.select("#char-chart-container");
+            container.select("svg").remove();
+
+            const margin = {top: 20, right: 20, bottom: 100, left: 40};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 300 - margin.top - margin.bottom;
+
+            const svg = container.append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .range([0, width])
+                .domain(data.map(d => d.name))
+                .padding(0.2);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "translate(-10,0)rotate(-45)")
+                .style("text-anchor", "end")
+                .style("fill", "var(--text-color)");
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.count)])
+                .range([height, 0]);
+
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .selectAll("text")
+                .style("fill", "var(--text-color)");
+
+            svg.selectAll("mybar")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", d => x(d.name))
+                .attr("y", d => y(d.count))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.count))
+                .attr("fill", "var(--title-color)");
+        }
+        
         document.addEventListener('DOMContentLoaded', () => { loadSettings(); });
     </script>
 </body>

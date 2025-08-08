@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    
+
     <style>
         :root {
             --dark-bg: #0a0f18;
@@ -35,7 +35,7 @@
         .module-description { font-size: 0.9em; color: #a6adc8; margin-top: 10px; line-height: 1.5; }
         .view { display: none; }
         .view.active { display: block; }
-        
+
         .module-view { max-width: 1100px; margin: 0 auto; }
         .module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; gap: 15px; }
         .module-header h1 { font-size: 1.8em; text-align: left; }
@@ -71,23 +71,23 @@
         .form-field label { display: block; margin-bottom: 8px; color: var(--accent-color); }
         .form-field input, .form-field textarea { width: 100%; background-color: rgba(10, 15, 24, 0.8); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px; border-radius: 5px; font-family: 'Exo 2', sans-serif; font-size: 1em; }
         .form-field textarea { min-height: 120px; resize: vertical; }
-        
+
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
         .modal-content { background-color: var(--dark-bg); margin: 10% auto; padding: 30px; border: 1px solid var(--border-color); width: 80%; max-width: 700px; border-radius: 8px; box-shadow: 0 0 25px rgba(137, 180, 250, 0.3); display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-header h3 { margin: 0; color: var(--title-color); }
         .modal-close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none; }
         .import-textarea { width: 100%; height: 300px; background-color: #0c121c; border: 1px solid var(--border-color); color: var(--text-color); padding: 10px; border-radius: 5px; font-family: 'Exo 2', sans-serif; font-size: 0.9em; resize: vertical; margin-bottom: 20px; }
-        
+
         .settings-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 15px 25px; align-items: center; }
         .settings-grid label { justify-self: end; }
         .settings-grid input[type="range"] { width: 100%; }
         .settings-grid input[type="color"] { width: 50px; height: 30px; padding: 2px; border: 1px solid var(--border-color); background-color: transparent; }
-        
+
         .plot-point-card { border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; margin-bottom: 15px; background-color: rgba(10, 15, 24, 0.5); }
         .plot-point-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .plot-point-header input { flex-grow: 1; margin-right: 10px; }
-        
+
         #timeline-container { width: 100%; overflow-x: auto; }
         #timeline-svg { min-width: 100%; }
 
@@ -130,12 +130,12 @@
         <div id="racconto" class="tab-content active"><div id="racconto-container"><p class="status-message">Caricamento manoscritto...</p></div><div class="add-post-container"><button class="ai-button" onclick="addNewPost()">Nuovo Post</button></div></div>
         <div id="note" class="tab-content"><div id="note-container"><p class="status-message">Caricamento note...</p></div><div class="add-post-container"><button class="ai-button" onclick="addNewNote()">Nuova Nota</button></div></div>
     </div>
-    
+
     <div id="characters-view" class="view module-view">
          <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Personaggi</h1><div><button class="ai-button" onclick="addNewItem('personaggi', 'character', { nome: 'Nuovo Personaggio' })">Nuovo Personaggio</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="character-list" class="item-list"><p class="status-message">Nessun personaggio.</p></ul></div><div id="character-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un personaggio.</p></div></div></div>
     </div>
-    
+
     <div id="places-view" class="view module-view">
          <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Luoghi</h1><div><button class="ai-button" onclick="addNewItem('luoghi', 'place', { nome: 'Nuovo Luogo' })">Nuovo Luogo</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="place-list" class="item-list"><p class="status-message">Nessun luogo.</p></ul></div><div id="place-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un luogo.</p></div></div></div>
@@ -150,7 +150,7 @@
          <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Linee Narrative</h1><div><button class="ai-button" onclick="addNewItem('linee_narrative', 'narrative_line', { nome: 'Nuova Linea Narrativa', premessa: '', plotPoints: [] })">Nuova Linea Narrativa</button></div></div>
         <div class="two-column-layout"><div class="list-panel"><ul id="narrative_line-list" class="item-list"><p class="status-message">Nessuna linea narrativa.</p></ul></div><div id="narrative_line-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni una linea narrativa.</p></div></div></div>
     </div>
-    
+
     <div id="analysis-view" class="view module-view">
          <div class="module-header">
             <button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button>
@@ -177,6 +177,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, deleteDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyAmAey1SSLxLJwW6bZH9JNRF8Of4jEtVfQ",
@@ -190,6 +191,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app);
+        const analyzeNarrativeLines = httpsCallable(functions, 'analyzeNarrativeLines');
 
         let currentUser = null, projectRef = null, manuscriptRef = null, charactersRef = null, placesRef = null, objectsRef = null, narrativeLinesRef = null;
         let unsubscribe = {}, isSaving = false, saveTimeout = {};
@@ -223,20 +226,20 @@
 
                 if (unsubscribe.manuscript) unsubscribe.manuscript();
                 unsubscribe.manuscript = onSnapshot(manuscriptRef, (doc) => {
-                    if (isSaving) return; 
+                    if (isSaving) return;
                     renderDocument(doc.exists() ? doc.data() : { posts: [], notes: [] });
                 });
             } else {
                 signInAnonymously(auth).catch((error) => console.error("Errore login anonimo:", error));
             }
         });
-        
+
         function renderDocument(data) {
             const raccontoContainer = document.getElementById('racconto-container');
             raccontoContainer.innerHTML = '';
             if (data.posts && data.posts.length > 0) data.posts.forEach(p => createPostElement(raccontoContainer, p.title, p.body));
             else raccontoContainer.innerHTML = `<p class="status-message">Nessun capitolo.</p>`;
-            
+
             const noteContainer = document.getElementById('note-container');
             noteContainer.innerHTML = '';
             if (data.notes && data.notes.length > 0) data.notes.forEach(n => createNoteElement(noteContainer, n.title, n.body));
@@ -266,7 +269,7 @@
             const notesData = Array.from(document.querySelectorAll('#note-container .post')).map(el => ({ title: el.querySelector('.post-title').innerText, body: el.querySelector('.editor').innerText }));
             try {
                 await setDoc(manuscriptRef, { posts: postsData, notes: notesData, lastUpdated: new Date() });
-            } catch (error) { console.error("Errore salvataggio:", error); } 
+            } catch (error) { console.error("Errore salvataggio:", error); }
             finally { isSaving = false; }
         }
 
@@ -323,12 +326,12 @@
                 }
             });
         }
-        
+
         function openItemDetail(prefix, id, data) {
             document.querySelectorAll(`#${prefix}-list .list-item`).forEach(el => el.classList.remove('active'));
             const activeItem = document.querySelector(`#${prefix}-list [data-id="${id}"]`);
             if (activeItem) activeItem.classList.add('active');
-            
+
             const panel = document.getElementById(`${prefix}-detail-panel`);
             if (prefix === 'narrative_line') {
                 panel.innerHTML = `<div class="post" data-id="${id}">
@@ -368,6 +371,16 @@
             container.appendChild(card);
         }
 
+        window.addNewPlotPoint = function() {
+            const container = document.getElementById('plot-points-container');
+            if (!container) return;
+
+            const newIndex = container.children.length;
+            createPlotPointCard(container, newIndex, `Punto Chiave ${newIndex + 1}`, '');
+
+            triggerItemSave('narrative_line');
+        }
+
         window.triggerItemSave = (prefix) => { clearTimeout(saveTimeout[prefix]); saveTimeout[prefix] = setTimeout(() => saveItem(prefix), 1500); }
 
         async function saveItem(prefix) {
@@ -389,11 +402,11 @@
             } else {
                 itemData = { nome: document.getElementById(`${prefix}-name`).value, descrizione: document.getElementById(`${prefix}-desc`).value };
             }
-            
+
             const collectionName = collectionMap[prefix];
             if (!collectionName) return;
             const itemDocRef = doc(collection(projectRef, collectionName), id);
-            try { await setDoc(itemDocRef, itemData, { merge: true }); } 
+            try { await setDoc(itemDocRef, itemData, { merge: true }); }
             catch (e) { console.error(`Errore salvataggio ${prefix}:`, e); }
         }
 
@@ -407,7 +420,7 @@
         window.addNewPlace = () => addNewItem('luoghi', 'place', { nome: "Nuovo Luogo", descrizione: "" });
         window.addNewObject = () => addNewItem('oggetti', 'object', { nome: "Nuovo Oggetto", descrizione: "" });
         window.addNewNarrativeLine = () => addNewItem('linee_narrative', 'narrative_line', { nome: "Nuova Linea Narrativa", premessa: '', plotPoints: [] });
-        
+
         window.deleteItem = async (prefix, id) => {
             const collectionName = collectionMap[prefix];
             if (!collectionName) return;
@@ -416,7 +429,7 @@
                 document.getElementById(`${prefix}-detail-panel`).innerHTML = `<div class="post"><p class="status-message">Elemento eliminato.</p></div>`;
             });
         }
-        
+
         window.openTab = function(evt, tabName) {
             const view = evt.target.closest('.module-view');
             view.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
@@ -437,7 +450,7 @@
             confirmButton.onclick = () => { onConfirm(); closeModal('confirm-modal'); };
             openModal('confirm-modal');
         }
-        
+
         function parseText(fullText, separatorRegex, itemPrefix) {
             const itemsData = [];
             const itemsRaw = fullText.trim().split(separatorRegex);
@@ -465,7 +478,7 @@
             const parsedImportData = { posts: postsData, notes: notesData };
             showConfirmModal("Conferma Importazione", "Questo sovrascriverà il contenuto attuale. Continuare?", () => saveImportedData(parsedImportData));
         }
-        
+
         window.importNotesData = async function() {
             const notesText = document.getElementById('import-notes-textarea').value;
             if (!notesText.trim()) return;
@@ -478,11 +491,11 @@
 
         async function saveImportedData(data, modalToClose = 'import-modal') {
             isSaving = true;
-            try { await setDoc(manuscriptRef, { ...data, lastUpdated: new Date() }); } 
-            catch (error) { console.error("Errore importazione:", error); } 
+            try { await setDoc(manuscriptRef, { ...data, lastUpdated: new Date() }); }
+            catch (error) { console.error("Errore importazione:", error); }
             finally { isSaving = false; closeModal(modalToClose); }
         }
-        
+
         window.exportToMarkdown = function() {
             let markdownContent = '';
             document.querySelectorAll('#racconto-container .post').forEach(post => { markdownContent += `## ${post.querySelector('.post-title').innerText}\n\n${post.querySelector('.editor').innerText}\n\n`; });
@@ -544,7 +557,7 @@
             const svg = d3.select("#timeline-svg");
             svg.selectAll("*").remove();
 
-            const narrativeLines = await getAllNarrativeLines();
+            const narrativeLines = (await getAllNarrativeLines()).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
             if (narrativeLines.length === 0) {
                 status.textContent = 'Nessuna linea narrativa da visualizzare.';
                 return;
@@ -555,7 +568,7 @@
             const containerWidth = document.getElementById('timeline-container').clientWidth;
             const yPadding = 100;
             const xPadding = 200;
-            
+
             const totalWidth = Math.max(containerWidth, d3.max(narrativeLines, d => d.plotPoints ? d.plotPoints.length * xPadding : 0));
 
             svg.attr("width", totalWidth)
@@ -563,7 +576,7 @@
 
             narrativeLines.forEach((line, i) => {
                 const g = svg.append("g").attr("transform", `translate(${margin.left}, ${i * yPadding + margin.top + 40})`);
-                
+
                 g.append("text")
                  .attr("x", 0)
                  .attr("y", -10)
@@ -610,8 +623,10 @@
             const status = document.getElementById('analysis-status');
             status.style.display = 'block';
             status.textContent = 'Analisi con Gemini in corso...';
-            
+
             const narrativeLines = await getAllNarrativeLines();
+            await renderSimpleTimeline();
+
             if (narrativeLines.length < 2) {
                 status.textContent = 'Sono necessarie almeno due linee narrative per l\'analisi degli incroci.';
                 return;
@@ -619,17 +634,62 @@
 
             let prompt = "Analizza le seguenti linee narrative e i loro punti chiave. Identifica ogni punto in cui le trame si intersecano (personaggi si incontrano, eventi si influenzano, luoghi condivisi). Restituisci un JSON con una lista di 'nodi' (tutti i punti chiave) e una lista di 'incroci'. Ogni incrocio deve specificare l'ID del nodo di partenza, l'ID del nodo di arrivo e una breve descrizione dell'incrocio.\n\n";
             narrativeLines.forEach(line => {
-                prompt += `Linea Narrativa: "${line.nome}" (ID: ${line.id})\n`;
+                prompt += `Linea Narrativa: \"${line.nome}\" (ID: ${line.id})\n`;
                 if(line.plotPoints) {
                     line.plotPoints.forEach((pp, index) => {
-                        prompt += `- Punto Chiave ${index}: "${pp.titolo}" (ID: ${line.id}_${index})\n`;
+                        prompt += `- Punto Chiave ${index}: \"${pp.titolo}\" (ID: ${line.id}_${index})\n`;
                     });
                 }
             });
 
-            alert("Integrazione con Gemini in fase di sviluppo. Il prompt per l'analisi è stato stampato nella console.");
-            console.log("PROMPT PER GEMINI:", prompt);
-            status.textContent = 'Analisi completata (simulata). Il grafico degli incroci non è ancora implementato.';
+            try {
+                const result = await analyzeNarrativeLines({ prompt: prompt });
+                const analysisResult = result.data;
+
+                console.log("Risultato analisi da Gemini:", analysisResult);
+
+                const svg = d3.select("#timeline-svg");
+                svg.select(".intersections").remove();
+
+                if (analysisResult && analysisResult.incroci && analysisResult.incroci.length > 0) {
+                    status.textContent = 'Analisi completata. Visualizzazione degli incroci...';
+
+                    const nodePositions = new Map();
+                    const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+                    const yPadding = 100;
+                    const xPadding = 200;
+
+                    const sortedNarrativeLines = narrativeLines.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+                    sortedNarrativeLines.forEach((line, lineIndex) => {
+                        if (line.plotPoints) {
+                            line.plotPoints.forEach((pp, ppIndex) => {
+                                const nodeId = `${line.id}_${ppIndex}`;
+                                const x = margin.left + ppIndex * xPadding + 90;
+                                const y = lineIndex * yPadding + margin.top + 40 + 30;
+                                nodePositions.set(nodeId, { x, y });
+                            });
+                        }
+                    });
+
+                    const intersectionGroup = svg.append("g").attr("class", "intersections");
+                    intersectionGroup.selectAll("path").data(analysisResult.incroci).enter().append("path")
+                        .attr("d", d => {
+                            const fromPos = nodePositions.get(d.from);
+                            const toPos = nodePositions.get(d.to);
+                            if (!fromPos || !toPos) return null;
+                            const dx = toPos.x - fromPos.x, dy = toPos.y - fromPos.y, dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+                            return `M${fromPos.x},${fromPos.y}A${dr},${dr} 0 0,1 ${toPos.x},${toPos.y}`;
+                        })
+                        .attr("fill", "none").attr("stroke", "var(--danger-color)").attr("stroke-width", 1.5)
+                        .attr("stroke-dasharray", "4, 4").style("opacity", 0).transition().duration(500).style("opacity", 0.8);
+                } else {
+                    status.textContent = 'Analisi completata. Nessun incrocio trovato.';
+                }
+            } catch (error) {
+                console.error("Errore chiamata Cloud Function:", error);
+                status.textContent = `Errore durante l'analisi: ${error.message}`;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => { loadSettings(); });

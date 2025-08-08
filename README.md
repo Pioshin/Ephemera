@@ -1,6 +1,6 @@
-================================
+
 Ephemera - Novel Writing Tool 
-================================
+
 
 Thank you for using Ephemera! This document will guide you through understanding what Ephemera is and how to get it working on your Windows computer.
 

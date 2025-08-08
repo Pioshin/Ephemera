@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemera - Cruscotto di Progetto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <style>
+        :root {
+            --dark-bg: #0a0f18;
+            --panel-bg: rgba(24, 28, 41, 0.8);
+            --border-color: #313244;
+            --text-color: #cdd6f4;
+            --title-color: #89b4fa;
+            --accent-color: #a6e3a1;
+            --glow-color: rgba(137, 180, 250, 0.2);
+            --danger-color: #f38ba8;
+            --base-font-size: 17px;
+        }
+        body { font-family: 'Exo 2', sans-serif; font-size: var(--base-font-size); color: var(--text-color); max-width: 1200px; margin: 40px auto; padding: 0 20px; background-color: var(--dark-bg); background-image: radial-gradient(var(--border-color) 1px, transparent 1px); background-size: 25px 25px; transition: background-color 0.3s, color 0.3s; }
+        .app-header { text-align: center; margin-bottom: 20px; }
+        .app-header h1 { color: var(--title-color); font-weight: 700; font-size: 2.5em; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color); margin: 0; }
+        .global-controls { text-align: center; margin-bottom: 30px; }
+        h2 { color: var(--accent-color); font-weight: 300; font-size: 1.2em; letter-spacing: 1px; margin: 10px 0 0 0; text-transform: uppercase; }
+        .dashboard-header { text-align: center; margin-bottom: 50px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .module-card { background-color: var(--panel-bg); border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 0 20px rgba(0,0,0,0.2), inset 0 0 10px var(--glow-color); backdrop-filter: blur(3px); padding: 25px; text-align: center; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; }
+        .module-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--glow-color); }
+        .module-icon { font-size: 3em; color: var(--title-color); margin-bottom: 20px; text-shadow: 0 0 15px var(--glow-color); }
+        .module-title { font-size: 1.5em; font-weight: 700; color: var(--accent-color); margin: 0; }
+        .module-description { font-size: 0.9em; color: #a6adc8; margin-top: 10px; line-height: 1.5; }
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        .module-view { max-width: 1100px; margin: 0 auto; }
+        .module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; gap: 15px; }
+        .module-header h1 { font-size: 1.8em; text-align: left; }
+        .ai-button { background-color: var(--title-color); color: var(--dark-bg); border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Exo 2', sans-serif; font-weight: 700; transition: all 0.2s ease; white-space: nowrap; }
+        .ai-button:hover { background-color: var(--accent-color); box-shadow: 0 0 10px rgba(166, 227, 161, 0.5); }
+        .status-message { color: #888; font-style: italic; text-align: center; padding: 50px; }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
+        .tab-button { padding: 12px 25px; cursor: pointer; border: none; background-color: transparent; font-size: 1.1em; font-family: 'Exo 2', sans-serif; color: #7f849c; border-bottom: 3px solid transparent; margin-bottom: -1px; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-button:hover { color: var(--title-color); }
+        .tab-button.active { color: var(--title-color); border-bottom: 3px solid var(--title-color); text-shadow: 0 0 5px var(--glow-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .post { background-color: var(--panel-bg); padding: 30px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color); box-shadow: 0 0 20px rgba(0,0,0,0.2), inset 0 0 10px var(--glow-color); backdrop-filter: blur(3px); }
+        .post-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .post-title { margin: 0; color: var(--accent-color); font-size: 1.4em; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 0 8px rgba(166, 227, 161, 0.3); flex-grow: 1; outline: none; }
+        .post-controls { display: flex; gap: 10px; }
+        .control-button { background: none; border: 1px solid var(--border-color); color: #7f849c; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-size: 1.2em; transition: all 0.2s ease; }
+        .control-button:hover { background-color: var(--border-color); color: var(--text-color); }
+        .delete-button:hover { background-color: var(--danger-color); color: var(--dark-bg); border-color: var(--danger-color); }
+        .editor { text-align: justify; outline: none; min-height: 150px; }
+        .add-post-container { text-align: center; margin-bottom: 25px; }
+
+        .two-column-layout { display: flex; gap: 30px; }
+        .list-panel { flex: 1; min-width: 250px; max-width: 350px; }
+        .detail-panel { flex: 3; }
+        .item-list { list-style: none; padding: 0; margin: 0; }
+        .list-item { background-color: var(--panel-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 5px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; }
+        .list-item:hover { background-color: var(--border-color); }
+        .list-item.active { background-color: var(--title-color); color: var(--dark-bg); font-weight: 700; }
+        .detail-panel .post { min-height: 500px; }
+        .form-field { margin-bottom: 20px; }
+        .form-field label { display: block; margin-bottom: 8px; color: var(--accent-color); }
+        .form-field input, .form-field textarea { width: 100%; background-color: rgba(10, 15, 24, 0.8); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px; border-radius: 5px; font-family: 'Exo 2', sans-serif; font-size: 1em; }
+        .form-field textarea { min-height: 120px; resize: vertical; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
+        .modal-content { background-color: var(--dark-bg); margin: 10% auto; padding: 30px; border: 1px solid var(--border-color); width: 80%; max-width: 700px; border-radius: 8px; box-shadow: 0 0 25px rgba(137, 180, 250, 0.3); display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--title-color); }
+        .modal-close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none; }
+        .import-textarea { width: 100%; height: 300px; background-color: #0c121c; border: 1px solid var(--border-color); color: var(--text-color); padding: 10px; border-radius: 5px; font-family: 'Exo 2', sans-serif; font-size: 0.9em; resize: vertical; margin-bottom: 20px; }
+        
+        .settings-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 15px 25px; align-items: center; }
+        .settings-grid label { justify-self: end; }
+        .settings-grid input[type="range"] { width: 100%; }
+        .settings-grid input[type="color"] { width: 50px; height: 30px; padding: 2px; border: 1px solid var(--border-color); background-color: transparent; }
+        
+        .plot-point-card { border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; margin-bottom: 15px; background-color: rgba(10, 15, 24, 0.5); }
+        .plot-point-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .plot-point-header input { flex-grow: 1; margin-right: 10px; }
+        
+        #timeline-container { width: 100%; overflow-x: auto; }
+        #timeline-svg { min-width: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-header"><h1>Ephemera</h1></div>
+
+    <!-- Vista Cruscotto -->
+    <div id="dashboard-view" class="view active">
+        <div class="dashboard-header">
+            <div class="global-controls"><button class="ai-button" onclick="openModal('settings-modal')" title="Personalizza Interfaccia">⚙️</button></div>
+            <h2>Cruscotto di Progetto</h2>
+        </div>
+        <div class="dashboard-grid">
+            <div class="module-card" onclick="navigateTo('editor-view')"><div class="module-icon">📖</div><h3 class="module-title">Manoscritto</h3><p class="module-description">Scriva e organizzi capitoli e note.</p></div>
+            <div class="module-card" onclick="navigateTo('characters-view')"><div class="module-icon">👤</div><h3 class="module-title">Personaggi</h3><p class="module-description">Crei schede dettagliate e conduca interviste AI.</p></div>
+            <div class="module-card" onclick="navigateTo('places-view')"><div class="module-icon">🌍</div><h3 class="module-title">Luoghi</h3><p class="module-description">Costruisca le sue ambientazioni con l'aiuto dell'AI.</p></div>
+            <div class="module-card" onclick="navigateTo('objects-view')"><div class="module-icon">💎</div><h3 class="module-title">Oggetti</h3><p class="module-description">Cataloghi gli elementi chiave della sua storia.</p></div>
+            <div class="module-card" onclick="navigateTo('narrative-lines-view')"><div class="module-icon">📈</div><h3 class="module-title">Linee Narrative</h3><p class="module-description">Tracci gli archi narrativi principali e secondari.</p></div>
+            <div class="module-card" onclick="navigateTo('analysis-view')"><div class="module-icon">📊</div><h3 class="module-title">Analisi Romanzo</h3><p class="module-description">Visualizzi le timeline e gli incroci della trama.</p></div>
+        </div>
+    </div>
+
+    <!-- Viste dei Moduli -->
+    <div id="editor-view" class="view module-view">
+        <div class="module-header">
+            <button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button>
+            <h1>Editor Manoscritto</h1>
+            <div>
+                <button class="ai-button" onclick="openImportModal()">Importa</button>
+                <button class="ai-button" onclick="exportToMarkdown()">Esporta</button>
+            </div>
+        </div>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'racconto')">Racconto</button>
+            <button class="tab-button" onclick="openTab(event, 'note')">Note</button>
+        </div>
+        <div id="racconto" class="tab-content active"><div id="racconto-container"><p class="status-message">Caricamento manoscritto...</p></div><div class="add-post-container"><button class="ai-button" onclick="addNewPost()">Nuovo Post</button></div></div>
+        <div id="note" class="tab-content"><div id="note-container"><p class="status-message">Caricamento note...</p></div><div class="add-post-container"><button class="ai-button" onclick="addNewNote()">Nuova Nota</button></div></div>
+    </div>
+    
+    <div id="characters-view" class="view module-view">
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Personaggi</h1><div><button class="ai-button" onclick="addNewItem('personaggi', 'character', { nome: 'Nuovo Personaggio' })">Nuovo Personaggio</button></div></div>
+        <div class="two-column-layout"><div class="list-panel"><ul id="character-list" class="item-list"><p class="status-message">Nessun personaggio.</p></ul></div><div id="character-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un personaggio.</p></div></div></div>
+    </div>
+    
+    <div id="places-view" class="view module-view">
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Luoghi</h1><div><button class="ai-button" onclick="addNewItem('luoghi', 'place', { nome: 'Nuovo Luogo' })">Nuovo Luogo</button></div></div>
+        <div class="two-column-layout"><div class="list-panel"><ul id="place-list" class="item-list"><p class="status-message">Nessun luogo.</p></ul></div><div id="place-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un luogo.</p></div></div></div>
+    </div>
+
+    <div id="objects-view" class="view module-view">
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Modulo Oggetti</h1><div><button class="ai-button" onclick="addNewItem('oggetti', 'object', { nome: 'Nuovo Oggetto' })">Nuovo Oggetto</button></div></div>
+        <div class="two-column-layout"><div class="list-panel"><ul id="object-list" class="item-list"><p class="status-message">Nessun oggetto.</p></ul></div><div id="object-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni un oggetto.</p></div></div></div>
+    </div>
+
+    <div id="narrative-lines-view" class="view module-view">
+         <div class="module-header"><button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button><h1>Linee Narrative</h1><div><button class="ai-button" onclick="addNewItem('linee_narrative', 'narrative_line', { nome: 'Nuova Linea Narrativa', premessa: '', plotPoints: [] })">Nuova Linea Narrativa</button></div></div>
+        <div class="two-column-layout"><div class="list-panel"><ul id="narrative_line-list" class="item-list"><p class="status-message">Nessuna linea narrativa.</p></ul></div><div id="narrative_line-detail-panel" class="detail-panel"><div class="post"><p class="status-message">Selezioni una linea narrativa.</p></div></div></div>
+    </div>
+    
+    <div id="analysis-view" class="view module-view">
+         <div class="module-header">
+            <button class="ai-button" onclick="navigateTo('dashboard-view')">← Cruscotto</button>
+            <h1>Analisi Romanzo</h1>
+            <div>
+                <button class="ai-button" onclick="renderSimpleTimeline()">Timeline Semplice</button>
+                <button class="ai-button" onclick="analyzeWithGemini()">Analizza Incroci con Gemini</button>
+            </div>
+        </div>
+        <div id="timeline-container" class="post">
+            <svg id="timeline-svg"></svg>
+            <div id="analysis-status" class="status-message">Selezioni una modalità di visualizzazione.</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="import-modal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Importa Manoscritto</h3><button class="modal-close" onclick="closeModal('import-modal')">&times;</button></div><p style="font-size: 0.9em; color: #a6adc8; margin-top:0;">Incolli qui l'intero testo.</p><textarea id="import-textarea" class="import-textarea" placeholder="Incolli qui il testo completo..."></textarea><button class="ai-button" onclick="importData()">Importa e Salva</button></div></div>
+    <div id="import-notes-modal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Importa Note</h3><button class="modal-close" onclick="closeModal('import-notes-modal')">&times;</button></div><p style="font-size: 0.9em; color: #a6adc8; margin-top:0;">Incolli qui solo il testo delle note.</p><textarea id="import-notes-textarea" class="import-textarea" placeholder="Incolli qui le note..."></textarea><button class="ai-button" onclick="importNotesData()">Importa e Salva Note</button></div></div>
+    <div id="confirm-modal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="confirm-modal-title">Conferma Azione</h3></div><p id="confirm-modal-text">Sei sicuro?</p><div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;"><button class="ai-button" style="background-color: var(--border-color);" onclick="closeModal('confirm-modal')">Annulla</button><button id="confirm-modal-button" class="ai-button" style="background-color: var(--danger-color);">Conferma</button></div></div></div>
+    <div id="settings-modal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Personalizza Interfaccia</h3><button class="modal-close" onclick="closeModal('settings-modal')">&times;</button></div><div class="settings-grid"><label for="font-size-slider">Dimensione Testo</label><input type="range" id="font-size-slider" min="14" max="24" step="1" oninput="updateSettings()"><label for="bg-color-picker">Colore Sfondo</label><input type="color" id="bg-color-picker" oninput="updateSettings()"><label for="text-color-picker">Colore Testo</label><input type="color" id="text-color-picker" oninput="updateSettings()"></div><div style="text-align: right; margin-top: 30px;"><button class="ai-button" onclick="resetSettings()">Ripristina Predefiniti</button></div></div></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, deleteDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAmAey1SSLxLJwW6bZH9JNRF8Of4jEtVfQ",
+          authDomain: "ephemera-writer.firebaseapp.com",
+          projectId: "ephemera-writer",
+          storageBucket: "ephemera-writer.appspot.com",
+          messagingSenderId: "219315261426",
+          appId: "1:219315261426:web:e3220ccd199dc6d661a56b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null, projectRef = null, manuscriptRef = null, charactersRef = null, placesRef = null, objectsRef = null, narrativeLinesRef = null;
+        let unsubscribe = {}, isSaving = false, saveTimeout = {};
+
+        const collectionMap = {
+            character: 'personaggi',
+            place: 'luoghi',
+            object: 'oggetti',
+            narrative_line: 'linee_narrative'
+        };
+
+        window.navigateTo = function(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            if (viewId === 'characters-view') loadItems('personaggi', 'character');
+            if (viewId === 'places-view') loadItems('luoghi', 'place');
+            if (viewId === 'objects-view') loadItems('oggetti', 'object');
+            if (viewId === 'narrative-lines-view') loadItems('linee_narrative', 'narrative_line');
+            if (viewId === 'analysis-view') renderSimpleTimeline();
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                projectRef = doc(db, "progetti", currentUser.uid);
+                manuscriptRef = doc(projectRef, "manoscritto", "contenuto");
+                charactersRef = collection(projectRef, "personaggi");
+                placesRef = collection(projectRef, "luoghi");
+                objectsRef = collection(projectRef, "oggetti");
+                narrativeLinesRef = collection(projectRef, "linee_narrative");
+
+                if (unsubscribe.manuscript) unsubscribe.manuscript();
+                unsubscribe.manuscript = onSnapshot(manuscriptRef, (doc) => {
+                    if (isSaving) return; 
+                    renderDocument(doc.exists() ? doc.data() : { posts: [], notes: [] });
+                });
+            } else {
+                signInAnonymously(auth).catch((error) => console.error("Errore login anonimo:", error));
+            }
+        });
+        
+        function renderDocument(data) {
+            const raccontoContainer = document.getElementById('racconto-container');
+            raccontoContainer.innerHTML = '';
+            if (data.posts && data.posts.length > 0) data.posts.forEach(p => createPostElement(raccontoContainer, p.title, p.body));
+            else raccontoContainer.innerHTML = `<p class="status-message">Nessun capitolo.</p>`;
+            
+            const noteContainer = document.getElementById('note-container');
+            noteContainer.innerHTML = '';
+            if (data.notes && data.notes.length > 0) data.notes.forEach(n => createNoteElement(noteContainer, n.title, n.body));
+            else noteContainer.innerHTML = `<p class="status-message">Nessuna nota.</p>`;
+        }
+
+        function createPostElement(container, title, body) {
+            const el = document.createElement('div');
+            el.className = 'post';
+            el.innerHTML = `<div class="post-header"><h2 class="post-title" contenteditable="true" oninput="triggerSave()">${title}</h2><div class="post-controls"><button class="control-button" onclick="moveItem(this, -1, 'POST')">↑</button><button class="control-button" onclick="moveItem(this, 1, 'POST')">↓</button><button class="control-button delete-button" onclick="deleteItem(this, 'POST')">×</button></div></div><div class="editor" contenteditable="true" oninput="triggerSave()">${body}</div>`;
+            container.appendChild(el);
+        }
+
+        function createNoteElement(container, title, body) {
+            const el = document.createElement('div');
+            el.className = 'post';
+            el.innerHTML = `<div class="post-header"><h2 class="post-title" contenteditable="true" oninput="triggerSave()">${title}</h2><div class="post-controls"><button class="control-button" onclick="moveItem(this, -1, 'NOTA')">↑</button><button class="control-button" onclick="moveItem(this, 1, 'NOTA')">↓</button><button class="control-button delete-button" onclick="deleteItem(this, 'NOTA')">×</button></div></div><div class="editor" contenteditable="true" oninput="triggerSave()">${body}</div>`;
+            container.appendChild(el);
+        }
+
+        function triggerSave() { clearTimeout(saveTimeout.manuscript); saveTimeout.manuscript = setTimeout(saveDocument, 1500); }
+
+        async function saveDocument() {
+            if (!manuscriptRef) return;
+            isSaving = true;
+            const postsData = Array.from(document.querySelectorAll('#racconto-container .post')).map(el => ({ title: el.querySelector('.post-title').innerText, body: el.querySelector('.editor').innerText }));
+            const notesData = Array.from(document.querySelectorAll('#note-container .post')).map(el => ({ title: el.querySelector('.post-title').innerText, body: el.querySelector('.editor').innerText }));
+            try {
+                await setDoc(manuscriptRef, { posts: postsData, notes: notesData, lastUpdated: new Date() });
+            } catch (error) { console.error("Errore salvataggio:", error); } 
+            finally { isSaving = false; }
+        }
+
+        window.addNewPost = () => {
+            const container = document.getElementById('racconto-container');
+            if(container.querySelector('.status-message')) container.innerHTML = '';
+            createPostElement(container, `POST ${container.children.length + 1}`, "Nuovo capitolo...");
+            triggerSave();
+        }
+        window.addNewNote = () => {
+            const container = document.getElementById('note-container');
+            if(container.querySelector('.status-message')) container.innerHTML = '';
+            createNoteElement(container, `NOTA ${container.children.length + 1}`, "Nuova nota...");
+            triggerSave();
+        }
+
+        function renumberItems(containerSelector, prefix) {
+            document.querySelectorAll(containerSelector).forEach((item, index) => {
+                const titleElement = item.querySelector('.post-title');
+                if (titleElement.innerText.match(new RegExp(`^${prefix} \\d+`))) {
+                    titleElement.innerText = titleElement.innerText.replace(new RegExp(`^${prefix} \\d+`), `${prefix} ${index + 1}`);
+                }
+            });
+        }
+
+        window.moveItem = (button, direction, prefix) => {
+            const el = button.closest('.post');
+            const container = el.parentElement;
+            if (direction === -1 && el.previousElementSibling) container.insertBefore(el, el.previousElementSibling);
+            else if (direction === 1 && el.nextElementSibling) container.insertBefore(el.nextElementSibling, el);
+            if (prefix === 'POST') renumberItems('#racconto-container .post', 'POST');
+            else renumberItems('#note-container .post', 'NOTA');
+            triggerSave();
+        }
+
+        function loadItems(collectionName, prefix) {
+            const collectionRef = collection(projectRef, collectionName);
+            if (unsubscribe[collectionName]) unsubscribe[collectionName]();
+            unsubscribe[collectionName] = onSnapshot(collectionRef, (snapshot) => {
+                const list = document.getElementById(`${prefix}-list`);
+                list.innerHTML = '';
+                if (snapshot.empty) {
+                    list.innerHTML = `<p class="status-message">Nessun elemento.</p>`;
+                } else {
+                    snapshot.docs.sort((a, b) => (a.data().nome || '').localeCompare(b.data().nome || '')).forEach(doc => {
+                        const item = doc.data();
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-item';
+                        listItem.textContent = item.nome || 'Senza nome';
+                        listItem.dataset.id = doc.id;
+                        listItem.onclick = () => openItemDetail(prefix, doc.id, item);
+                        list.appendChild(listItem);
+                    });
+                }
+            });
+        }
+        
+        function openItemDetail(prefix, id, data) {
+            document.querySelectorAll(`#${prefix}-list .list-item`).forEach(el => el.classList.remove('active'));
+            const activeItem = document.querySelector(`#${prefix}-list [data-id="${id}"]`);
+            if (activeItem) activeItem.classList.add('active');
+            
+            const panel = document.getElementById(`${prefix}-detail-panel`);
+            if (prefix === 'narrative_line') {
+                panel.innerHTML = `<div class="post" data-id="${id}">
+                    <div class="post-header"><h2 class="post-title">${data.nome || 'Dettagli'}</h2><div><button class="ai-button" style="background-color: var(--danger-color);" onclick="deleteItem('${prefix}', '${id}')">Elimina</button></div></div>
+                    <div class="form-field"><label>Nome</label><input type="text" id="${prefix}-name" value="${data.nome || ''}" oninput="triggerItemSave('${prefix}')"></div>
+                    <div class="form-field"><label>Premessa</label><textarea id="${prefix}-premise" oninput="triggerItemSave('${prefix}')">${data.premessa || ''}</textarea></div>
+                    <hr style="border-color: var(--border-color); margin: 30px 0;">
+                    <h3>Punti Chiave della Trama</h3>
+                    <div id="plot-points-container"></div>
+                    <div class="add-post-container"><button class="ai-button" onclick="addNewPlotPoint()">Aggiungi Punto Chiave</button></div>
+                </div>`;
+                const plotPointsContainer = document.getElementById('plot-points-container');
+                if (data.plotPoints && data.plotPoints.length > 0) {
+                    data.plotPoints.forEach((pp, index) => createPlotPointCard(plotPointsContainer, index, pp.titolo, pp.descrizione));
+                }
+            } else {
+                panel.innerHTML = `<div class="post" data-id="${id}"><div class="post-header"><h2 class="post-title">${data.nome || 'Dettagli'}</h2><div><button class="ai-button" style="background-color: var(--danger-color);" onclick="deleteItem('${prefix}', '${id}')">Elimina</button></div></div><div class="form-field"><label>Nome</label><input type="text" id="${prefix}-name" value="${data.nome || ''}" oninput="triggerItemSave('${prefix}')"></div><div class="form-field"><label>Descrizione</label><textarea id="${prefix}-desc" oninput="triggerItemSave('${prefix}')">${data.descrizione || ''}</textarea></div></div>`;
+            }
+        }
+
+        function createPlotPointCard(container, index, title, description) {
+            const card = document.createElement('div');
+            card.className = 'plot-point-card';
+            card.dataset.index = index;
+            card.innerHTML = `
+                <div class="plot-point-header">
+                    <input type="text" class="plot-point-title" value="${title || ''}" placeholder="Titolo del punto chiave..." oninput="triggerItemSave('narrative_line')">
+                    <div>
+                        <button class="control-button" onclick="movePlotPoint(this, -1)">↑</button>
+                        <button class="control-button" onclick="movePlotPoint(this, 1)">↓</button>
+                        <button class="control-button delete-button" onclick="deletePlotPoint(this)">×</button>
+                    </div>
+                </div>
+                <textarea class="plot-point-desc" placeholder="Descrizione dell'evento..." oninput="triggerItemSave('narrative_line')">${description || ''}</textarea>
+                <div style="text-align: right; margin-top: 10px;"><button class="ai-button" onclick="alert('Funzione in sviluppo')">Assisti con AI</button></div>
+            `;
+            container.appendChild(card);
+        }
+
+        window.triggerItemSave = (prefix) => { clearTimeout(saveTimeout[prefix]); saveTimeout[prefix] = setTimeout(() => saveItem(prefix), 1500); }
+
+        async function saveItem(prefix) {
+            const panel = document.getElementById(`${prefix}-detail-panel`).querySelector('.post');
+            const id = panel.dataset.id;
+            if (!id) return;
+
+            let itemData;
+            if (prefix === 'narrative_line') {
+                const plotPoints = Array.from(document.querySelectorAll('.plot-point-card')).map(card => ({
+                    titolo: card.querySelector('.plot-point-title').value,
+                    descrizione: card.querySelector('.plot-point-desc').value
+                }));
+                itemData = {
+                    nome: document.getElementById(`${prefix}-name`).value,
+                    premessa: document.getElementById(`${prefix}-premise`).value,
+                    plotPoints: plotPoints
+                };
+            } else {
+                itemData = { nome: document.getElementById(`${prefix}-name`).value, descrizione: document.getElementById(`${prefix}-desc`).value };
+            }
+            
+            const collectionName = collectionMap[prefix];
+            if (!collectionName) return;
+            const itemDocRef = doc(collection(projectRef, collectionName), id);
+            try { await setDoc(itemDocRef, itemData, { merge: true }); } 
+            catch (e) { console.error(`Errore salvataggio ${prefix}:`, e); }
+        }
+
+        window.addNewItem = async (collectionName, prefix, data) => {
+            try {
+                const docRef = await addDoc(collection(projectRef, collectionName), data);
+                openItemDetail(prefix, docRef.id, data);
+            } catch (e) { console.error(`Errore creazione ${prefix}:`, e); }
+        }
+        window.addNewCharacter = () => addNewItem('personaggi', 'character', { nome: "Nuovo Personaggio", descrizione: "" });
+        window.addNewPlace = () => addNewItem('luoghi', 'place', { nome: "Nuovo Luogo", descrizione: "" });
+        window.addNewObject = () => addNewItem('oggetti', 'object', { nome: "Nuovo Oggetto", descrizione: "" });
+        window.addNewNarrativeLine = () => addNewItem('linee_narrative', 'narrative_line', { nome: "Nuova Linea Narrativa", premessa: '', plotPoints: [] });
+        
+        window.deleteItem = async (prefix, id) => {
+            const collectionName = collectionMap[prefix];
+            if (!collectionName) return;
+            showConfirmModal("Conferma Eliminazione", `Sei sicuro di voler eliminare questo elemento?`, async () => {
+                await deleteDoc(doc(collection(projectRef, collectionName), id));
+                document.getElementById(`${prefix}-detail-panel`).innerHTML = `<div class="post"><p class="status-message">Elemento eliminato.</p></div>`;
+            });
+        }
+        
+        window.openTab = function(evt, tabName) {
+            const view = evt.target.closest('.module-view');
+            view.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            view.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+            view.querySelector(`#${tabName}`).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        window.openModal = (id) => { document.getElementById(id).style.display = 'block'; };
+        window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+        window.openImportModal = () => openModal('import-modal');
+        window.openImportNotesModal = () => openModal('import-notes-modal');
+
+        function showConfirmModal(title, text, onConfirm) {
+            document.getElementById('confirm-modal-title').innerText = title;
+            document.getElementById('confirm-modal-text').innerText = text;
+            const confirmButton = document.getElementById('confirm-modal-button');
+            confirmButton.onclick = () => { onConfirm(); closeModal('confirm-modal'); };
+            openModal('confirm-modal');
+        }
+        
+        function parseText(fullText, separatorRegex, itemPrefix) {
+            const itemsData = [];
+            const itemsRaw = fullText.trim().split(separatorRegex);
+            if (itemsRaw.length > 0 && itemsRaw[0].trim() === '') itemsRaw.shift();
+            itemsRaw.forEach(chunk => {
+                if (!chunk.trim()) return;
+                const firstNewlineIndex = chunk.indexOf('\n');
+                let title = '', body = '';
+                if (firstNewlineIndex !== -1) {
+                    title = `${itemPrefix} ` + chunk.substring(0, firstNewlineIndex).trim();
+                    body = chunk.substring(firstNewlineIndex + 1).trim();
+                } else { title = `${itemPrefix} ` + chunk.trim(); }
+                itemsData.push({ title, body });
+            });
+            return itemsData;
+        }
+
+        window.importData = function() {
+            const fullText = document.getElementById('import-textarea').value;
+            if (!fullText.trim()) return;
+            const notesSeparator = "*************** NOTE PER LA STESURA ***************";
+            const textParts = fullText.split(notesSeparator);
+            const postsData = parseText(textParts[0] || '', /\n?\s*POST /, 'POST');
+            const notesData = textParts.length > 1 ? parseText(textParts[1] || '', /\n?\s*NOTA /, 'NOTA') : [];
+            const parsedImportData = { posts: postsData, notes: notesData };
+            showConfirmModal("Conferma Importazione", "Questo sovrascriverà il contenuto attuale. Continuare?", () => saveImportedData(parsedImportData));
+        }
+        
+        window.importNotesData = async function() {
+            const notesText = document.getElementById('import-notes-textarea').value;
+            if (!notesText.trim()) return;
+            const notesData = parseText(notesText, /\n?\s*NOTA /, 'NOTA');
+            const docSnap = await getDoc(manuscriptRef);
+            const currentData = docSnap.exists() ? docSnap.data() : { posts: [] };
+            const parsedImportData = { ...currentData, notes: notesData };
+            showConfirmModal("Conferma Importazione Note", "Questo sovrascriverà le note attuali. Continuare?", () => saveImportedData(parsedImportData, 'import-notes-modal'));
+        }
+
+        async function saveImportedData(data, modalToClose = 'import-modal') {
+            isSaving = true;
+            try { await setDoc(manuscriptRef, { ...data, lastUpdated: new Date() }); } 
+            catch (error) { console.error("Errore importazione:", error); } 
+            finally { isSaving = false; closeModal(modalToClose); }
+        }
+        
+        window.exportToMarkdown = function() {
+            let markdownContent = '';
+            document.querySelectorAll('#racconto-container .post').forEach(post => { markdownContent += `## ${post.querySelector('.post-title').innerText}\n\n${post.querySelector('.editor').innerText}\n\n`; });
+            const notes = document.querySelectorAll('#note-container .post');
+            if (notes.length > 0) {
+                markdownContent += `\n\n*************** NOTE PER LA STESURA ***************\n\n`;
+                notes.forEach(note => { markdownContent += `### ${note.querySelector('.post-title').innerText}\n\n${note.querySelector('.editor').innerText}\n\n`; });
+            }
+            const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'Ephemera.md'; a.click(); URL.revokeObjectURL(url);
+        };
+
+        const settingsDefaults = { fontSize: '17', bgColor: '#0a0f18', textColor: '#cdd6f4' };
+        function applySettings(settings) {
+            document.documentElement.style.setProperty('--base-font-size', `${settings.fontSize}px`);
+            document.documentElement.style.setProperty('--dark-bg', settings.bgColor);
+            document.documentElement.style.setProperty('--text-color', settings.textColor);
+        }
+        function saveSettings(settings) { localStorage.setItem('ephemera-settings', JSON.stringify(settings)); }
+        window.updateSettings = function() {
+            const settings = {
+                fontSize: document.getElementById('font-size-slider').value,
+                bgColor: document.getElementById('bg-color-picker').value,
+                textColor: document.getElementById('text-color-picker').value
+            };
+            applySettings(settings);
+            saveSettings(settings);
+        }
+        window.resetSettings = function() {
+            localStorage.removeItem('ephemera-settings');
+            applySettings(settingsDefaults);
+            document.getElementById('font-size-slider').value = settingsDefaults.fontSize;
+            document.getElementById('bg-color-picker').value = settingsDefaults.bgColor;
+            document.getElementById('text-color-picker').value = settingsDefaults.textColor;
+        }
+        function loadSettings() {
+            const savedSettings = JSON.parse(localStorage.getItem('ephemera-settings')) || settingsDefaults;
+            applySettings(savedSettings);
+            document.getElementById('font-size-slider').value = savedSettings.fontSize;
+            document.getElementById('bg-color-picker').value = savedSettings.bgColor;
+            document.getElementById('text-color-picker').value = savedSettings.textColor;
+        }
+
+        async function getAllNarrativeLines() {
+            const narrativeLinesRef = collection(projectRef, "linee_narrative");
+            const snapshot = await getDocs(narrativeLinesRef);
+            const lines = [];
+            snapshot.forEach(doc => {
+                lines.push({ id: doc.id, ...doc.data() });
+            });
+            return lines;
+        }
+
+        window.renderSimpleTimeline = async function() {
+            const status = document.getElementById('analysis-status');
+            status.textContent = 'Caricamento timeline...';
+            const svg = d3.select("#timeline-svg");
+            svg.selectAll("*").remove();
+
+            const narrativeLines = await getAllNarrativeLines();
+            if (narrativeLines.length === 0) {
+                status.textContent = 'Nessuna linea narrativa da visualizzare.';
+                return;
+            }
+            status.style.display = 'none';
+
+            const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+            const containerWidth = document.getElementById('timeline-container').clientWidth;
+            const yPadding = 100;
+            const xPadding = 200;
+            
+            const totalWidth = Math.max(containerWidth, d3.max(narrativeLines, d => d.plotPoints ? d.plotPoints.length * xPadding : 0));
+
+            svg.attr("width", totalWidth)
+               .attr("height", narrativeLines.length * yPadding);
+
+            narrativeLines.forEach((line, i) => {
+                const g = svg.append("g").attr("transform", `translate(${margin.left}, ${i * yPadding + margin.top + 40})`);
+                
+                g.append("text")
+                 .attr("x", 0)
+                 .attr("y", -10)
+                 .attr("fill", "var(--accent-color)")
+                 .style("font-weight", "bold")
+                 .text(line.nome);
+
+                if (line.plotPoints && line.plotPoints.length > 0) {
+                    const nodes = g.selectAll("g.node")
+                        .data(line.plotPoints)
+                        .enter().append("g")
+                        .attr("class", "node")
+                        .attr("transform", (d, j) => `translate(${j * xPadding}, 0)`);
+
+                    nodes.append("rect")
+                        .attr("width", 180)
+                        .attr("height", 60)
+                        .attr("rx", 5)
+                        .attr("fill", "var(--panel-bg)")
+                        .attr("stroke", "var(--title-color)");
+
+                    nodes.append("text")
+                        .attr("x", 10)
+                        .attr("y", 20)
+                        .attr("fill", "var(--text-color)")
+                        .style("font-size", "14px")
+                        .text(d => d.titolo.substring(0, 20) + (d.titolo.length > 20 ? '...' : ''));
+
+                    g.selectAll("line.link")
+                        .data(d3.range(line.plotPoints.length - 1))
+                        .enter().append("line")
+                        .attr("class", "link")
+                        .attr("x1", d => d * xPadding + 180)
+                        .attr("y1", 30)
+                        .attr("x2", d => (d + 1) * xPadding)
+                        .attr("y2", 30)
+                        .attr("stroke", "var(--border-color)")
+                        .attr("stroke-width", 2);
+                }
+            });
+        }
+
+        window.analyzeWithGemini = async function() {
+            const status = document.getElementById('analysis-status');
+            status.style.display = 'block';
+            status.textContent = 'Analisi con Gemini in corso...';
+            
+            const narrativeLines = await getAllNarrativeLines();
+            if (narrativeLines.length < 2) {
+                status.textContent = 'Sono necessarie almeno due linee narrative per l\'analisi degli incroci.';
+                return;
+            }
+
+            let prompt = "Analizza le seguenti linee narrative e i loro punti chiave. Identifica ogni punto in cui le trame si intersecano (personaggi si incontrano, eventi si influenzano, luoghi condivisi). Restituisci un JSON con una lista di 'nodi' (tutti i punti chiave) e una lista di 'incroci'. Ogni incrocio deve specificare l'ID del nodo di partenza, l'ID del nodo di arrivo e una breve descrizione dell'incrocio.\n\n";
+            narrativeLines.forEach(line => {
+                prompt += `Linea Narrativa: "${line.nome}" (ID: ${line.id})\n`;
+                if(line.plotPoints) {
+                    line.plotPoints.forEach((pp, index) => {
+                        prompt += `- Punto Chiave ${index}: "${pp.titolo}" (ID: ${line.id}_${index})\n`;
+                    });
+                }
+            });
+
+            alert("Integrazione con Gemini in fase di sviluppo. Il prompt per l'analisi è stato stampato nella console.");
+            console.log("PROMPT PER GEMINI:", prompt);
+            status.textContent = 'Analisi completata (simulata). Il grafico degli incroci non è ancora implementato.';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { loadSettings(); });
+    </script>
+</body>
+</html>

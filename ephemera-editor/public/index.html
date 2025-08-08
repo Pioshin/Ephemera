@@ -179,13 +179,16 @@
         import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, deleteDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
+        // IMPORTANT: Replace this with your own Firebase project's configuration.
+        // You can find this in your Firebase project settings.
+        // See readme.txt for more details.
         const firebaseConfig = {
-          apiKey: "AIzaSyAmAey1SSLxLJwW6bZH9JNRF8Of4jEtVfQ",
-          authDomain: "ephemera-writer.firebaseapp.com",
-          projectId: "ephemera-writer",
-          storageBucket: "ephemera-writer.appspot.com",
-          messagingSenderId: "219315261426",
-          appId: "1:219315261426:web:e3220ccd199dc6d661a56b"
+          apiKey: "YOUR_API_KEY",
+          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+          projectId: "YOUR_PROJECT_ID",
+          storageBucket: "YOUR_PROJECT_ID.appspot.com",
+          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+          appId: "YOUR_APP_ID"
         };
 
         const app = initializeApp(firebaseConfig);

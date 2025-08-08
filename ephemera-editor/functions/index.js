@@ -15,7 +15,7 @@ const { VertexAI } = require("@google-cloud/vertexai");
 // IMPORTANT: For this to work, you must have authenticated with Google Cloud
 // in your deployment environment (e.g., by running `gcloud auth application-default login`).
 // The function will automatically use the project's service account credentials when deployed.
-const vertex_ai = new VertexAI({ project: "ephemera-writer", location: "us-central1" });
+const vertex_ai = new VertexAI({ project: process.env.GCLOUD_PROJECT, location: "us-central1" });
 const model = "gemini-1.0-pro"; // Or another suitable model like gemini-1.5-flash
 
 const generativeModel = vertex_ai.getGenerativeModel({
